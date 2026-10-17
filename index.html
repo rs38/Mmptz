@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VECTR-8 // 3D Rocket &amp; Fan Car Physics Simulator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- 3D Viewport Canvas -->
+    <canvas id="sim-canvas" aria-label="3D Rocket and Fan Car Physics Simulation Viewport"></canvas>
+
+    <!-- Crash Impact Flash Overlay -->
+    <div id="crash-overlay" class="crash-overlay" aria-hidden="true"></div>
+
+    <!-- Top Telemetry Bar -->
+    <header class="hud-panel top-bar">
+      <div class="brand">
+        <span class="brand-badge">VECTR-8</span>
+        <div class="brand-titles">
+          <h1>3D ROCKET &amp; FAN CAR SIM</h1>
+          <p>8 THRUSTERS · 1000kW RWD · 60kW SUCTION FAN</p>
+        </div>
+      </div>
+
+      <div class="telemetry-strip" role="region" aria-label="Live Flight and Drive Telemetry">
+        <div class="metric">
+          <span class="metric-label">ALT / CLEARANCE</span>
+          <span class="metric-value" id="tel-alt">0.00 <small>m</small></span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">SPEED</span>
+          <span class="metric-value" id="tel-speed">0.0 <small>km/h</small></span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">MASS (DRY+FUEL)</span>
+          <span class="metric-value" id="tel-mass">1600 <small>kg</small></span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">NET THRUST</span>
+          <span class="metric-value" id="tel-thrust">0.0 <small>kN</small></span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">FAN SUCTION</span>
+          <span class="metric-value purple" id="tel-suction">0.0 <small>kN</small></span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">CHASSIS STATUS</span>
+          <span class="metric-value accent" id="tel-damage">100% OK</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">PITCH / ROLL / YAW</span>
+          <span class="metric-value" id="tel-attitude">0° / 0° / 0°</span>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button type="button" id="btn-render-mode" class="hud-btn" title="Toggle Vector Wireframe vs Old-School Solid 3D (B)">
+          3D: VECTOR WIRE
+        </button>
+        <button type="button" id="btn-vectors" class="hud-btn active" title="Toggle 3D Force Vectors (V)">
+          VECTORS: ON
+        </button>
+        <button type="button" id="btn-camera" class="hud-btn" title="Cycle Camera Mode (C)">
+          CAM: CHASE
+        </button>
+        <button type="button" id="btn-audio" class="hud-btn" title="Toggle Thruster &amp; Fan Audio (M)">
+          AUDIO: OFF
+        </button>
+        <button type="button" id="btn-reset" class="hud-btn danger" title="Reset &amp; Repair Car at Launchpad (R)">
+          RESET [R]
+        </button>
+      </div>
+    </header>
+
+    <!-- Left Panel: Flight Systems, 60kW Fan, Fuel Tank & Schematic -->
+    <aside class="hud-panel left-panel" aria-label="Systems, Fuel Tank, and Schematic">
+      <div class="panel-scroll">
+        <!-- Flight Computer & 60kW Suction Fan Toggles -->
+        <section class="panel-section">
+          <div class="section-header">
+            <h2>SYSTEMS &amp; 60kW SUCTION FAN</h2>
+          </div>
+          <div class="toggle-grid">
+            <button type="button" id="btn-fan" class="toggle-btn purple-toggle" title="Toggle 60kW Underbody Suction Ventilator (F)">
+              <span class="indicator"></span>
+              <div class="toggle-text">
+                <strong>60kW SUCTION FAN [F]</strong>
+                <small id="fan-status">OFF · Lower Suspension to Seal Skirt</small>
+              </div>
+            </button>
+            <button type="button" id="btn-stab" class="toggle-btn active" title="Toggle Gyro Attitude PID Stabilizer (G)">
+              <span class="indicator"></span>
+              <div class="toggle-text">
+                <strong>GYRO STABILIZER [G]</strong>
+                <small id="stab-status">PID Active (Auto-Level)</small>
+              </div>
+            </button>
+            <button type="button" id="btn-hover" class="toggle-btn" title="Toggle Auto-Hover Altitude Hold (H)">
+              <span class="indicator"></span>
+              <div class="toggle-text">
+                <strong>AUTO-HOVER [H]</strong>
+                <small id="hover-status">Manual Collective</small>
+              </div>
+            </button>
+          </div>
+
+          <div class="mode-switch-row" role="group" aria-label="Slider Behavior Mode">
+            <span class="mode-label">SLIDER MODE:</span>
+            <button type="button" id="mode-scale" class="chip-btn active" title="Sliders adjust each thruster's max power capacity">
+              MAX POWER SCALE
+            </button>
+            <button type="button" id="mode-direct" class="chip-btn" title="Sliders continuously fire thrusters at the set percentage (No PID override)">
+              DIRECT CONSTANT FIRE
+            </button>
+          </div>
+        </section>
+
+        <!-- Rocket Propellant Tank Visualization & Controls -->
+        <section class="panel-section">
+          <div class="section-header">
+            <h2>ROCKET PROPELLANT TANK</h2>
+            <button type="button" id="btn-refuel" class="mini-btn accent" title="Refill Rocket Fuel Tank to 100% (T)">
+              REFUEL [T]
+            </button>
+          </div>
+
+          <div class="fuel-widget">
+            <canvas id="fuel-canvas" width="76" height="92" aria-label="Animated rocket fuel tank gauge"></canvas>
+            <div class="fuel-details">
+              <div class="fuel-stat-row">
+                <span>REMAINING:</span>
+                <strong id="fuel-kg-readout">200.0 / 200 kg</strong>
+              </div>
+              <div class="fuel-stat-row">
+                <span>BURN RATE:</span>
+                <strong id="fuel-rate-readout">0.0 kg/s</strong>
+              </div>
+              <div class="fuel-stat-row">
+                <span>EST. BURN TIME:</span>
+                <strong id="fuel-time-readout">∞ s</strong>
+              </div>
+
+              <div class="slider-group compact" style="margin-top: 6px; margin-bottom: 0;">
+                <div class="slider-header">
+                  <label for="slider-fuel-cap">TANK CAPACITY</label>
+                  <output id="out-fuel-cap" for="slider-fuel-cap">200 kg</output>
+                </div>
+                <input type="range" id="slider-fuel-cap" class="green-slider" min="40" max="800" step="10" value="200" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Live Top-Down Vector Car Thruster & Suspension Schematic -->
+        <section class="panel-section schematic-section">
+          <div class="section-header">
+            <h2>8-THRUSTER &amp; SUSPENSION TELEMETRY</h2>
+            <span class="badge-sub">τ = r × F</span>
+          </div>
+          <canvas id="schematic-canvas" width="268" height="184" aria-label="Top-down schematic of the 8 thrusters, RWD, fan, and suspension"></canvas>
+          <div class="legend-inline">
+            <span><i class="dot cyan"></i>4 Down</span>
+            <span><i class="dot orange"></i>4 Side</span>
+            <span><i class="dot purple"></i>60kW Fan</span>
+            <span><i class="dot green"></i>RWD</span>
+          </div>
+        </section>
+
+        <!-- Flight & Drive Controls Guide -->
+        <section class="panel-section controls-guide">
+          <div class="section-header">
+            <h2>FLIGHT &amp; RWD CONTROLS</h2>
+          </div>
+          <div class="key-grid">
+            <div class="key-row"><kbd>W</kbd> / <kbd>S</kbd> <span>1000kW RWD Drive (Ground) · Pitch/Thrust (Air)</span></div>
+            <div class="key-row"><kbd>A</kbd> / <kbd>D</kbd> <span>Steer Front Wheels (Ground) · Strafe (Air)</span></div>
+            <div class="key-row"><kbd>SPACE</kbd> / <kbd>SHIFT</kbd> <span>Collective Up / Down (4 Down Thrusters)</span></div>
+            <div class="key-row"><kbd>Q</kbd> / <kbd>E</kbd> <span>Yaw Rotate Left / Right (Diag. Side Thrusters)</span></div>
+            <div class="key-row"><kbd>F</kbd> · <kbd>B</kbd> · <kbd>T</kbd> <span>60kW Fan [F] · Solid 3D [B] · Refuel [T]</span></div>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <!-- Right Panel: Drivetrain, Suspension & Thruster Power Sliders -->
+    <aside class="hud-panel right-panel" aria-label="Drivetrain, Suspension, and Thruster Power Sliders">
+      <div class="panel-scroll">
+        <!-- Drivetrain (1000kW RWD) & Suspension Ride Height -->
+        <section class="panel-section">
+          <div class="section-header">
+            <h2>CHASSIS, RWD &amp; SUCTION SEAL</h2>
+            <button type="button" id="btn-seal-preset" class="mini-btn purple-btn" title="Lower suspension to 0.28m and engage 60kW Suction Fan">
+              ENGAGE SEAL MODE
+            </button>
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-rwd-power">CLASSIC RWD POWER (REAR AXLE)</label>
+              <output id="out-rwd-power" for="slider-rwd-power">1000 kW</output>
+            </div>
+            <input type="range" id="slider-rwd-power" class="green-slider" min="0" max="1000" step="10" value="1000" />
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-susp-height">SUSPENSION HEIGHT (TRAVEL)</label>
+              <output id="out-susp-height" for="slider-susp-height">0.55 m</output>
+            </div>
+            <input type="range" id="slider-susp-height" class="purple-slider" min="0.22" max="0.90" step="0.01" value="0.55" />
+            <div class="preset-buttons">
+              <button type="button" data-h="0.27" class="mini-btn susp-preset">0.27m Skirt Seal</button>
+              <button type="button" data-h="0.55" class="mini-btn susp-preset">0.55m Sport</button>
+              <button type="button" data-h="0.82" class="mini-btn susp-preset">0.82m Offroad/Landing</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Master Thruster & Gravity Sliders -->
+        <section class="panel-section">
+          <div class="section-header">
+            <h2>MASTER THRUST &amp; GRAVITY</h2>
+            <button type="button" id="btn-equalize" class="mini-btn" title="Reset all thruster sliders to balanced 100%">
+              BALANCE ALL
+            </button>
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-down-master">DOWN THRUSTERS MAX (×4)</label>
+              <output id="out-down-master" for="slider-down-master">6.5 kN</output>
+            </div>
+            <input type="range" id="slider-down-master" class="cyan-slider" min="0" max="15" step="0.1" value="6.5" />
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-side-master">SIDE THRUSTERS MAX (×4)</label>
+              <output id="out-side-master" for="slider-side-master">4.0 kN</output>
+            </div>
+            <input type="range" id="slider-side-master" class="orange-slider" min="0" max="12" step="0.1" value="4.0" />
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-hover-base">BASE HOVER THROTTLE</label>
+              <output id="out-hover-base" for="slider-hover-base">0%</output>
+            </div>
+            <input type="range" id="slider-hover-base" class="cyan-slider" min="0" max="100" step="1" value="0" />
+            <div class="preset-buttons">
+              <button type="button" id="btn-hover-0" class="mini-btn">0% (Off)</button>
+              <button type="button" id="btn-hover-eq" class="mini-btn accent">1.0G Hover Eq.</button>
+              <button type="button" id="btn-hover-lift" class="mini-btn">1.15G Climb</button>
+            </div>
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-gravity">GRAVITY (g)</label>
+              <output id="out-gravity" for="slider-gravity">9.81 m/s²</output>
+            </div>
+            <input type="range" id="slider-gravity" class="green-slider" min="0" max="20" step="0.05" value="9.81" />
+            <div class="preset-buttons">
+              <button type="button" data-g="0" class="mini-btn g-preset">0G Space</button>
+              <button type="button" data-g="1.62" class="mini-btn g-preset">Moon</button>
+              <button type="button" data-g="3.72" class="mini-btn g-preset">Mars</button>
+              <button type="button" data-g="9.81" class="mini-btn g-preset">Earth</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4 Downward Corner Thrusters -->
+        <section class="panel-section">
+          <div class="section-header">
+            <h2>4 DOWNWARD THRUSTERS (VERTICAL)</h2>
+            <span class="badge-sub cyan-text">+Y LIFT</span>
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-d-fl">D1 · FRONT-LEFT DOWN</label>
+              <span class="live-readout"><b id="live-d-fl">0.0 kN</b> · <output id="out-d-fl" for="slider-d-fl">100%</output></span>
+            </div>
+            <input type="range" id="slider-d-fl" class="cyan-slider thruster-slider" data-thruster="D_FL" min="0" max="150" step="1" value="100" />
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-d-fr">D2 · FRONT-RIGHT DOWN</label>
+              <span class="live-readout"><b id="live-d-fr">0.0 kN</b> · <output id="out-d-fr" for="slider-d-fr">100%</output></span>
+            </div>
+            <input type="range" id="slider-d-fr" class="cyan-slider thruster-slider" data-thruster="D_FR" min="0" max="150" step="1" value="100" />
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-d-rl">D3 · REAR-LEFT DOWN</label>
+              <span class="live-readout"><b id="live-d-rl">0.0 kN</b> · <output id="out-d-rl" for="slider-d-rl">100%</output></span>
+            </div>
+            <input type="range" id="slider-d-rl" class="cyan-slider thruster-slider" data-thruster="D_RL" min="0" max="150" step="1" value="100" />
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-d-rr">D4 · REAR-RIGHT DOWN</label>
+              <span class="live-readout"><b id="live-d-rr">0.0 kN</b> · <output id="out-d-rr" for="slider-d-rr">100%</output></span>
+            </div>
+            <input type="range" id="slider-d-rr" class="cyan-slider thruster-slider" data-thruster="D_RR" min="0" max="150" step="1" value="100" />
+          </div>
+        </section>
+
+        <!-- 4 Side Lateral Thrusters (2 Left, 2 Right) -->
+        <section class="panel-section">
+          <div class="section-header">
+            <h2>4 SIDE THRUSTERS (2 LEFT · 2 RIGHT)</h2>
+            <span class="badge-sub orange-text">±X STRAFE &amp; YAW</span>
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-s-fl">S1 · FRONT-LEFT SIDE (→ +X)</label>
+              <span class="live-readout"><b id="live-s-fl">0.0 kN</b> · <output id="out-s-fl" for="slider-s-fl">100%</output></span>
+            </div>
+            <input type="range" id="slider-s-fl" class="orange-slider thruster-slider" data-thruster="S_FL" min="0" max="150" step="1" value="100" />
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-s-fr">S2 · FRONT-RIGHT SIDE (← -X)</label>
+              <span class="live-readout"><b id="live-s-fr">0.0 kN</b> · <output id="out-s-fr" for="slider-s-fr">100%</output></span>
+            </div>
+            <input type="range" id="slider-s-fr" class="orange-slider thruster-slider" data-thruster="S_FR" min="0" max="150" step="1" value="100" />
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-s-rl">S3 · REAR-LEFT SIDE (→ +X)</label>
+              <span class="live-readout"><b id="live-s-rl">0.0 kN</b> · <output id="out-s-rl" for="slider-s-rl">100%</output></span>
+            </div>
+            <input type="range" id="slider-s-rl" class="orange-slider thruster-slider" data-thruster="S_RL" min="0" max="150" step="1" value="100" />
+          </div>
+
+          <div class="slider-group compact">
+            <div class="slider-header">
+              <label for="slider-s-rr">S4 · REAR-RIGHT SIDE (← -X)</label>
+              <span class="live-readout"><b id="live-s-rr">0.0 kN</b> · <output id="out-s-rr" for="slider-s-rr">100%</output></span>
+            </div>
+            <input type="range" id="slider-s-rr" class="orange-slider thruster-slider" data-thruster="S_RR" min="0" max="150" step="1" value="100" />
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <!-- Bottom Status Notification Toast -->
+    <div id="status-banner" class="status-banner" aria-live="polite">
+      DRIVE WITH <kbd>WASD</kbd> (1000kW RWD) · LAUNCH WITH <kbd>SPACE</kbd> · TOGGLE 60kW FAN WITH <kbd>F</kbd>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
