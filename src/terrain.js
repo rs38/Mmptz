@@ -27,18 +27,7 @@ export function createArena() {
       entryZStart: -8,
       entryZEnd: 10,
     },
-    rings: [
-      { id: 0, x: 0, y: 4.8, z: 20, r: 4.3, normal: { x: 0, y: 0, z: 1 }, passed: false },
-      { id: 1, x: 0, y: 10.8, z: 42, r: 4.3, normal: { x: 0, y: 0, z: 1 }, passed: false },
-      { id: 2, x: -18, y: 14.0, z: 57, r: 4.5, normal: { x: -0.5, y: 0, z: 0.866 }, passed: false },
-      { id: 3, x: -36, y: 18.5, z: 72, r: 4.3, normal: { x: 0, y: 0, z: 1 }, passed: false },
-      { id: 4, x: 0, y: 21.0, z: 66, r: 4.6, normal: { x: 1, y: 0, z: 0 }, passed: false },
-      { id: 5, x: 38, y: 25.5, z: 54, r: 4.3, normal: { x: 0, y: 0, z: -1 }, passed: false },
-      { id: 6, x: 24, y: 15.0, z: 24, r: 4.5, normal: { x: 0, y: 0, z: -1 }, passed: false },
-      { id: 7, x: 0, y: 7.0, z: 0, r: 4.5, normal: { x: 0, y: 0, z: -1 }, passed: false },
-      // Apex Inverted Stunt Ring
-      { id: 8, x: -26, y: 18.6, z: 20.0, r: 4.5, normal: { x: 0, y: 0.835, z: -0.55 }, passed: false },
-    ],
+    rings: [],
   };
 }
 

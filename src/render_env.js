@@ -154,29 +154,7 @@ export function renderArena(camera, ctx, sim, renderMode) {
     }
   }
 
-  // 3. Waypoint Rings
-  for (const ring of sim.arena.rings) {
-    const col = ring.passed ? 'rgba(0, 255, 157, 0.45)' : '#ff7b29';
-    const segs = 16;
-    const n = Vec3.norm(ring.normal);
-    const upRef = Math.abs(n.y) < 0.9 ? { x: 0, y: 1, z: 0 } : { x: 1, y: 0, z: 0 };
-    const u = Vec3.norm(Vec3.cross(n, upRef));
-    const v = Vec3.cross(n, u);
-
-    let prev = null;
-    for (let i = 0; i <= segs; i++) {
-      const a = (i / segs) * Math.PI * 2;
-      const pt = {
-        x: ring.x + u.x * Math.cos(a) * ring.r + v.x * Math.sin(a) * ring.r,
-        y: ring.y + u.y * Math.cos(a) * ring.r + v.y * Math.sin(a) * ring.r,
-        z: ring.z + u.z * Math.cos(a) * ring.r + v.z * Math.sin(a) * ring.r,
-      };
-      if (prev) camera.drawLine3D(prev, pt, col, ring.passed ? 1.4 : 2.5);
-      prev = pt;
-    }
-  }
-
-  // 4. Stunt Crescent Loop (Curved Wall, Red Neon Rims & Truss Framework)
+  // 3. Stunt Crescent Loop (Curved Wall, Red Neon Rims & Truss Framework)
   renderStuntLoop(camera, ctx, sim, renderMode);
 }
 
