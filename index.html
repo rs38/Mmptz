@@ -56,8 +56,8 @@
       </div>
 
       <div class="top-actions">
-        <button type="button" id="btn-render-mode" class="hud-btn" title="Toggle Vector Wireframe vs Old-School Solid 3D (B)">
-          3D: VECTOR WIRE
+        <button type="button" id="btn-render-mode" class="hud-btn active" title="Toggle Vector Wireframe vs Old-School Solid 3D (B)">
+          3D: SOLID FLAT
         </button>
         <button type="button" id="btn-vectors" class="hud-btn active" title="Toggle 3D Force Vectors (V)">
           VECTORS: ON
@@ -90,11 +90,11 @@
                 <small id="fan-status">OFF · Lower Suspension to Seal Skirt</small>
               </div>
             </button>
-            <button type="button" id="btn-stab" class="toggle-btn active" title="Toggle Gyro Attitude PID Stabilizer (G)">
+            <button type="button" id="btn-stab" class="toggle-btn" title="Toggle Gyro Attitude PID Stabilizer (G)">
               <span class="indicator"></span>
               <div class="toggle-text">
                 <strong>GYRO STABILIZER [G]</strong>
-                <small id="stab-status">PID Active (Auto-Level)</small>
+                <small id="stab-status">OFF (Raw Unassisted Physics)</small>
               </div>
             </button>
             <button type="button" id="btn-hover" class="toggle-btn" title="Toggle Auto-Hover Altitude Hold (H)">
@@ -120,25 +120,29 @@
         <!-- Rocket Propellant Tank Visualization & Controls -->
         <section class="panel-section">
           <div class="section-header">
-            <h2>ROCKET PROPELLANT TANK</h2>
-            <button type="button" id="btn-refuel" class="mini-btn accent" title="Refill Rocket Fuel Tank to 100% (T)">
-              REFUEL [T]
+            <h2>COLD GAS COPV TANK</h2>
+            <button type="button" id="btn-refuel" class="mini-btn accent" title="Recharge Cold Gas Pressure Tank to 350 bar (T)">
+              REFILL [T]
             </button>
           </div>
 
           <div class="fuel-widget">
-            <canvas id="fuel-canvas" width="76" height="92" aria-label="Animated rocket fuel tank gauge"></canvas>
+            <canvas id="fuel-canvas" width="76" height="92" aria-label="Animated cold gas pressure gauge"></canvas>
             <div class="fuel-details">
               <div class="fuel-stat-row">
-                <span>REMAINING:</span>
+                <span>PRESSURE:</span>
+                <strong id="fuel-pressure-readout">350 bar</strong>
+              </div>
+              <div class="fuel-stat-row">
+                <span>GAS MASS:</span>
                 <strong id="fuel-kg-readout">200.0 / 200 kg</strong>
               </div>
               <div class="fuel-stat-row">
-                <span>BURN RATE:</span>
+                <span>FLOW RATE:</span>
                 <strong id="fuel-rate-readout">0.0 kg/s</strong>
               </div>
               <div class="fuel-stat-row">
-                <span>EST. BURN TIME:</span>
+                <span>EST. DISCHARGE:</span>
                 <strong id="fuel-time-readout">∞ s</strong>
               </div>
 
