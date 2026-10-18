@@ -297,6 +297,7 @@ export class RocketCarSim {
     this.lastEventMessage = `CRASH IMPACT: ${gForce.toFixed(1)}G AT ${locationId.replace('_', '-')} — SUSPENSION BOTTOMED OUT!`;
   }
 
+  checkObjectives() {
     for (const ring of this.arena.rings) {
       if (!ring.passed) {
         const dist = Math.hypot(this.pos.x - ring.x, this.pos.y - ring.y, this.pos.z - ring.z);
