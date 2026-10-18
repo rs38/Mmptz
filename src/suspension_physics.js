@@ -80,7 +80,9 @@ export function stepSuspension(sim, localVel, forwardInput) {
       const fLatWorld = Vec3.scale(wheelRightWorld, clampedLatForce);
 
       // Classic RWD Longitudinal Drive (up to 1000 kW split across the 2 rear wheels!)
-      let driveForce = -vLong * 140; // Rolling resistance
+      const cRolling = 0.015;
+      const rollDragMag = Math.min(Math.abs(vLong) * 20, cRolling * springForceMag);
+      let driveForce = -Math.sign(vLong || 0) * rollDragMag;
       w.wheelspin = false;
 
       if (w.isRear && Math.abs(forwardInput) > 0.01 && sim.rwdMaxPowerKW > 0) {
