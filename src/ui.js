@@ -64,13 +64,13 @@ export function initUI(sim, renderer) {
     outFuelCap.textContent = fuelTxt;
     syncSliderCSS(sliderFuelCap, fuelTxt);
 
-    sim.downMaxForce = parseFloat(sliderDownMaster.value);
-    const downTxt = `${(sim.downMaxForce / 1000).toFixed(1)} kN`;
+    sim.downMaxForce = parseFloat(sliderDownMaster.value) * 1000;
+    const downTxt = `${parseFloat(sliderDownMaster.value).toFixed(1)} kN`;
     outDownMaster.textContent = downTxt;
     syncSliderCSS(sliderDownMaster, downTxt);
 
-    sim.sideMaxForce = parseFloat(sliderSideMaster.value);
-    const sideTxt = `${(sim.sideMaxForce / 1000).toFixed(1)} kN`;
+    sim.sideMaxForce = parseFloat(sliderSideMaster.value) * 1000;
+    const sideTxt = `${parseFloat(sliderSideMaster.value).toFixed(1)} kN`;
     outSideMaster.textContent = sideTxt;
     syncSliderCSS(sliderSideMaster, sideTxt);
 
