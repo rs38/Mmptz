@@ -102,19 +102,22 @@ export function initUI(sim, renderer) {
 
   function syncThrusterSliders() {
     for (const key of thrusterKeys) {
-      const slider = document.getElementById(`sl-${key}`);
-      const valOut = document.getElementById(`val-${key}`);
-      const liveOut = document.getElementById(`live-${key}`);
+      const slug = key.toLowerCase().replace('_', '-');
+      const slider = document.getElementById(`slider-${slug}`);
+      const valOut = document.getElementById(`out-${slug}`);
+      const liveOut = document.getElementById(`live-${slug}`);
       thrusterOutputs[key] = { slider, val: valOut, live: liveOut };
 
-      slider.addEventListener('input', () => {
-        const pct = parseInt(slider.value, 10);
-        sim.thrusters[key].sliderPct = pct;
-        const txt = `${pct}%`;
-        valOut.textContent = txt;
-        syncSliderCSS(slider, txt);
-      });
-      syncSliderCSS(slider, `${slider.value}%`);
+      if (slider) {
+        slider.addEventListener('input', () => {
+          const pct = parseInt(slider.value, 10);
+          sim.thrusters[key].sliderPct = pct;
+          const txt = `${pct}%`;
+          if (valOut) valOut.textContent = txt;
+          syncSliderCSS(slider, txt);
+        });
+        syncSliderCSS(slider, `${slider.value}%`);
+      }
     }
   }
   syncThrusterSliders();
