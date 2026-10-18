@@ -23,7 +23,8 @@ export function createArena() {
       w: 10.5,
       zStart: 10,
       r: 12.0,
-      maxTheta: 2.41, // ~138 degrees (curves past 90° into inverted overhang)
+      maxTheta: Math.PI, // 180 degrees: climbs straight up and turns completely horizontal upside down
+      ceilingLength: 16.0, // 16m horizontal inverted ceiling track
       entryZStart: -8,
       entryZEnd: 10,
     },
@@ -94,7 +95,7 @@ export function sampleSurface(arena, x, y, z) {
         const dy = y - Yc;
         const theta = Math.atan2(dz, -dy);
 
-        if (theta >= -0.05 && theta <= loop.maxTheta + 0.08) {
+        if (theta >= -0.05 && theta <= loop.maxTheta + 0.05) {
           const rCur = Math.hypot(dz, dy);
           const distToArc = loop.r - rCur; // >0 inside cylinder, <0 outside
           const surfY = Yc - loop.r * Math.cos(theta);
@@ -108,6 +109,18 @@ export function sampleSurface(arena, x, y, z) {
             point = { x, y: surfY, z: surfZ };
             padHit = { id: 'STUNT-LOOP', theta };
           }
+        }
+      }
+
+      // Horizontal Inverted Ceiling (Extending back towards negative Z at the 2*r apex)
+      const apexY = 2 * loop.r;
+      const ceilingZMin = loop.zStart - loop.ceilingLength;
+      if (z >= ceilingZMin - 1.0 && z <= loop.zStart + 0.5) {
+        if (Math.abs(y - apexY) < 3.0 || (y > apexY - 3.0 && y < apexY + 1.5)) {
+          bestY = apexY;
+          normal = { x: 0, y: -1, z: 0 }; // Ceiling normal points straight DOWN (-Y)
+          point = { x, y: apexY, z };
+          padHit = { id: 'STUNT-LOOP', theta: Math.PI, isCeiling: true };
         }
       }
     }
